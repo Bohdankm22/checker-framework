@@ -4,7 +4,6 @@ import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -150,19 +149,12 @@ public class StubGenerator {
             printClass(typeElement);
         } else {
             String outer = className.substring(0, index);
-            printClass(typeElement, outer.replace('.', '$'));
+            printClass(typeElement, outer);
         }
     }
 
     /** helper method that outputs the index for the provided class. */
     private void printClass(TypeElement typeElement) {
-        printClass(typeElement, null);
-    }
-
-    /** helper method that outputs the index for the provided class. */
-    private void printClass(TypeElement typeElement, String outerClass) {
-        List<TypeElement> innerClass = new ArrayList<TypeElement>();
-
         indent();
         if (typeElement.getKind() == ElementKind.INTERFACE) {
             out.print("interface");
@@ -173,9 +165,6 @@ public class StubGenerator {
         }
 
         out.print(' ');
-        if (outerClass != null) {
-            out.print(outerClass + "$");
-        }
         out.print(typeElement.getSimpleName());
 
         // Type parameters
@@ -204,15 +193,39 @@ public class StubGenerator {
 
         currentIndention = currentIndention + INDENTION;
 
-        printTypeMembers(typeElement.getEnclosedElements(), innerClass);
+        printTypeMembers(typeElement.getEnclosedElements());
 
         currentIndention = tempIndention;
         indent();
         out.println("}");
+    }
 
-        for (TypeElement element : innerClass) {
-            printClass(element, typeElement.getSimpleName().toString());
+    /** helper method that outputs the index for the provided class. */
+    private void printClass(TypeElement typeElement, String outerClassFullName) {
+        indent();
+        if (typeElement.getKind() == ElementKind.INTERFACE) {
+            out.print("interface");
+        } else if (typeElement.getKind() == ElementKind.CLASS) {
+            out.print("class");
+        } else {
+            return;
         }
+
+        out.print(' ');
+
+        if (outerClassFullName.contains(".")) {
+            out.print(outerClassFullName.substring(0, outerClassFullName.indexOf(".")));
+            out.print("{");
+            printClass(
+                    typeElement, outerClassFullName.substring(outerClassFullName.indexOf(".") + 1));
+        } else {
+            out.print(outerClassFullName);
+            out.print("{");
+            printClass(typeElement);
+        }
+
+        indent();
+        out.print("}");
     }
 
     /**
@@ -220,22 +233,22 @@ public class StubGenerator {
      *
      * @param members list of the class members
      */
-    private void printTypeMembers(List<? extends Element> members, List<TypeElement> innerClass) {
+    private void printTypeMembers(List<? extends Element> members) {
         for (Element element : members) {
             if (isPublicOrProtected(element)) {
-                printMember(element, innerClass);
+                printMember(element);
             }
         }
     }
 
     /** Helper method that outputs the declaration of the member */
-    private void printMember(Element member, List<TypeElement> innerClass) {
+    private void printMember(Element member) {
         if (member.getKind().isField()) {
             printFieldDecl((VariableElement) member);
         } else if (member instanceof ExecutableElement) {
             printMethodDecl((ExecutableElement) member);
         } else if (member instanceof TypeElement) {
-            innerClass.add((TypeElement) member);
+            printClass((TypeElement) member);
         }
     }
 
