@@ -22,6 +22,7 @@ import com.github.javaparser.ast.expr.BooleanLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
+import com.github.javaparser.ast.expr.LongLiteralExpr;
 import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NameExpr;
@@ -1437,6 +1438,22 @@ public class StubParser {
                 builder.setValue(name, Integer.valueOf(ilexpr.getValue()));
             } else if (expected.getKind() == TypeKind.ARRAY) {
                 Integer[] arr = {Integer.valueOf(ilexpr.getValue())};
+                builder.setValue(name, arr);
+            } else {
+                ErrorReporter.errorAbort(
+                        "StubParser: unhandled annotation attribute type: "
+                                + ilexpr
+                                + " and expected: "
+                                + expected);
+            }
+        } else if (expr instanceof LongLiteralExpr) {
+            LongLiteralExpr ilexpr = (LongLiteralExpr) expr;
+            ExecutableElement var = builder.findElement(name);
+            TypeMirror expected = var.getReturnType();
+            if (expected.getKind() == TypeKind.DECLARED || TypesUtils.isIntegral(expected)) {
+                builder.setValue(name, Long.valueOf(ilexpr.getValue().replace("L", "")));
+            } else if (expected.getKind() == TypeKind.ARRAY) {
+                Long[] arr = {Long.valueOf(ilexpr.getValue().replace("L", ""))};
                 builder.setValue(name, arr);
             } else {
                 ErrorReporter.errorAbort(

@@ -1,4 +1,6 @@
 import org.checkerframework.common.value.qual.IntRange;
-class Sample {
-      @IntRange(from = 3L, to = 20000L) int range(boolean big);
+
+class Main {
+      @IntRange(from = 3, to = 20000) int range(boolean big);
 }
+
