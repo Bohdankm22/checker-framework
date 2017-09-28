@@ -4,6 +4,8 @@
  * https://github.com/typetools/checker-framework/issues/1542
  * @compile -XDrawDiagnostics -processor org.checkerframework.common.value.ValueChecker -Astubs=intdeclaration.astub TestIntInAnnArg.java -AstubWarnIfNotFound
  */
+package issue1542;
+
 import org.checkerframework.common.value.qual.IntRange;
 
 class Main {
